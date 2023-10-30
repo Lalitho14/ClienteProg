@@ -1,12 +1,11 @@
 import java.io.*;
 import java.net.Socket;
 
-public class Cliente extends Thread {
+public class Cliente {
   private Socket socket;
   private DataOutputStream datos;
   private DataInputStream recibir;
-  EnviarMensajes send;
-  RecibirMensajes recive;
+  private ChatCliente chat;
   private String nickname;
 
   Cliente() {
@@ -14,27 +13,36 @@ public class Cliente extends Thread {
       socket = new Socket("127.0.0.1", 9999);
       datos = new DataOutputStream(socket.getOutputStream());
       recibir = new DataInputStream(socket.getInputStream());
-      send = new EnviarMensajes(socket, datos);
-      recive = new RecibirMensajes(recibir);
       nickname = "Invitado";
-      send.setNickname(nickname);
     } catch (Exception e) {
       System.err.println(e.getMessage());
     }
   }
 
-  @Override
-  public void run() {
+  public void IniciarCliente() {
+    BufferedReader leer = new BufferedReader(new InputStreamReader(System.in));
+    String usr;
+    System.out.print("Ingrese usuario : ");
     try {
-//      registrar();
-      recive.start();
-      send.start();
+      usr = leer.readLine();
+      this.nickname = usr;
+      chat = new ChatCliente(socket);
+      chat.start();
+
+      String mensaje;
+      while (true) {
+        System.out.print(nickname + " : ");
+        mensaje = leer.readLine();
+        datos.writeUTF(mensaje);
+      }
+
     } catch (Exception e) {
       System.err.println(e.getMessage());
     }
   }
 
-  public void registrar() {
+
+  private void registrar() {
     try {
       String mensaje, usr;
       BufferedReader leer = new BufferedReader(new InputStreamReader(System.in));
@@ -45,7 +53,7 @@ public class Cliente extends Thread {
       mensaje = recibir.readUTF();
       nickname = mensaje;
       System.out.println(mensaje);
-      send.setNickname(usr);
+//      send.setNickname(usr);
     } catch (Exception e) {
       System.err.println(e.getMessage());
     }
